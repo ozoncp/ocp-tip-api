@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"reflect"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -28,11 +28,9 @@ func TestSplitByBatches(t *testing.T) {
 		},
 	}
 
-	for i, fixture := range fixtures {
+	for _, fixture := range fixtures {
 		actualResult := SplitByBatches(fixture.sourceSlice, fixture.batchSize)
-		if !reflect.DeepEqual(actualResult, fixture.expectedResult) {
-			t.Fatalf("Test case %v fail. Got: %v, expected: %v", i+1, actualResult, fixture.expectedResult)
-		}
+		assert.Equal(t, fixture.expectedResult, actualResult)
 	}
 }
 
@@ -46,11 +44,9 @@ func TestReverseMap(t *testing.T) {
 			expectedResult: map[int]string{1: "a", 2: "b", 3: "c", 4: "d"},
 		},
 	}
-	for i, fixture := range fixtures {
+	for _, fixture := range fixtures {
 		actualResult := ReverseMap(fixture.sourceMap)
-		if !reflect.DeepEqual(actualResult, fixture.expectedResult) {
-			t.Fatalf("Test case %v fail. Got: %v, expected: %v", i+1, actualResult, fixture.expectedResult)
-		}
+		assert.Equal(t, fixture.expectedResult, actualResult)
 	}
 }
 
@@ -71,10 +67,8 @@ func TestFilterSlice(t *testing.T) {
 			expectedResult: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
 	}
-	for i, fixture := range fixtures {
+	for _, fixture := range fixtures {
 		actualResult := FilterSlice(fixture.sourceSlice, fixture.excludedValues)
-		if !reflect.DeepEqual(actualResult, fixture.expectedResult) {
-			t.Fatalf("Test case %v fail. Got: %v, expected: %v", i+1, actualResult, fixture.expectedResult)
-		}
+		assert.Equal(t, fixture.expectedResult, actualResult)
 	}
 }
