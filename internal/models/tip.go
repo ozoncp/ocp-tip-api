@@ -12,5 +12,5 @@ type Tip struct {
 
 // String возвращает строковое представление структуры Tip
 func (t Tip) String() string {
-	return fmt.Sprintf("User: %v, Text: %v, Problem: %v", t.UserId, t.Text, t.ProblemId)
+	return fmt.Sprintf("User: %d, Text: %s, Problem: %d", t.UserId, t.Text, t.ProblemId)
 }
