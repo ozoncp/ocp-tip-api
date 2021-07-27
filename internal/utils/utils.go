@@ -1,13 +1,15 @@
 package utils
 
-// SplitByBatches разделяет  слайс на батчи - исходный слайс конвертировать в слайс
+import "github.com/ozoncp/ocp-tip-api/internal/models"
+
+// SplitTipsByBatches разделяет слайс структур Tip на батчи - исходный слайс конвертировать в слайс
 // слайсов - чанки одинкового размера (кроме последнего)
-func SplitByBatches(sourceSlice []int, batchSize int) [][]int {
+func SplitTipsByBatches(sourceSlice []models.Tip, batchSize int) [][]models.Tip {
 
 	sourceLen := len(sourceSlice)
 	fullBatchesCount := sourceLen / batchSize
 	remainderBatchSize := sourceLen % batchSize
-	splittedSlice := make([][]int, (sourceLen+batchSize-1)/batchSize)
+	splittedSlice := make([][]models.Tip, (sourceLen+batchSize-1)/batchSize)
 
 	for i := 0; i < fullBatchesCount; i++ {
 		splittedSlice[i] = sourceSlice[i*batchSize : (i+1)*batchSize]
@@ -44,4 +46,14 @@ func FilterSlice(sourceSlice []int, excludedValues []int) []int {
 	}
 
 	return filteredSlice
+}
+
+// ConvertTipsToMap ковертирует слайс структур Tip в отображение, где ключ - идентификатор Tip, а значение - сама
+// структура
+func ConvertTipsToMap(tips []models.Tip) map[uint64]models.Tip {
+	m := make(map[uint64]models.Tip)
+	for _, tip := range tips {
+		m[tip.Id] = tip
+	}
+	return m
 }
