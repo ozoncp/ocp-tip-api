@@ -1,7 +1,6 @@
 package saver
 
 import (
-	"errors"
 	"github.com/ozoncp/ocp-tip-api/internal/flusher"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
 	"time"
@@ -9,52 +8,48 @@ import (
 
 // Saver - интерфейс для сохранения советов в хранилище с периодичностью
 type Saver interface {
-	Save(tip models.Tip) error
-	Init() error
-	Close() error
+	Save(tip models.Tip)
+	Init()
+	Close()
 }
 
 type saver struct {
-	tips        []models.Tip
-	tipsChan    chan models.Tip
-	capacity    uint
-	interval    time.Duration
-	flusher     flusher.Flusher
-	sigChan     chan struct{}
-	isInitiated bool
+	tipsChan chan models.Tip
+	capacity uint
+	interval time.Duration
+	flusher  flusher.Flusher
+	sigChan  chan struct{}
 }
 
 // Save добавляет совет в очередь для сохранения
-func (s *saver) Save(tip models.Tip) error {
-	if !s.isInitiated {
-		return errors.New("saver is not initiated")
-	}
+func (s *saver) Save(tip models.Tip) {
 	s.tipsChan <- tip
-	return nil
 }
 
 // Init запускает периодическое сохранение советов
-func (s *saver) Init() error {
-	if s.isInitiated {
-		return errors.New("saver has been initiated already")
-	}
+func (s *saver) Init() {
 	s.tipsChan = make(chan models.Tip)
 	s.sigChan = make(chan struct{})
-	s.isInitiated = true
 
 	go func() {
 		ticker := time.NewTicker(s.interval * time.Second)
 		defer ticker.Stop()
 
+		tips := make([]models.Tip, 0, s.capacity)
+
 		flush := func() {
-			if len(s.tips) == 0 {
+			if len(tips) == 0 {
 				return
 			}
-			notSavedTips := s.flusher.Flush(s.tips)
+			notSavedTips := s.flusher.Flush(tips)
 			if notSavedTips == nil {
-				s.tips = make([]models.Tip, 0, s.capacity)
+				tips = tips[:0]
 			} else {
-				s.tips = notSavedTips
+				if cap(notSavedTips) < int(s.capacity) {
+					tips = append(make([]models.Tip, 0, s.capacity), notSavedTips...)
+				} else {
+					tips = notSavedTips
+				}
 			}
 		}
 
@@ -63,35 +58,30 @@ func (s *saver) Init() error {
 			case <-ticker.C:
 				flush()
 			case tip := <-s.tipsChan:
-				s.tips = append(s.tips, tip)
+				tips = append(tips, tip)
+				if len(tips) == cap(tips) {
+					flush()
+				}
 			case <-s.sigChan:
 				flush()
 				return
 			}
 		}
 	}()
-
-	return nil
 }
 
 // Close останавливает периодическое сохранение советов
-func (s *saver) Close() error {
-	if !s.isInitiated {
-		return errors.New("saver is not initiated")
-	}
+func (s *saver) Close() {
 	defer func() {
 		close(s.tipsChan)
 		close(s.sigChan)
-		s.isInitiated = false
 	}()
 	s.sigChan <- struct{}{}
-	return nil
 }
 
 // NewSaver возвращает Saver с поддержкой переодического сохранения
 func NewSaver(capacity uint, flusher flusher.Flusher, interval time.Duration) Saver {
 	return &saver{
-		tips:     make([]models.Tip, 0, capacity),
 		capacity: capacity,
 		interval: interval,
 		flusher:  flusher,

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/ozoncp/ocp-tip-api/internal/mocks"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
 	"github.com/ozoncp/ocp-tip-api/internal/saver"
@@ -45,37 +44,17 @@ var _ = Describe("Saver", func() {
 		ctrl.Finish()
 	})
 
-	Context("When saver initiated", func() {
+	Context("When flushing is successful", func() {
 		JustBeforeEach(func() {
 			mockFlusher.EXPECT().Flush(gomock.Any()).Return(nil).AnyTimes()
 		})
 		It("saving is succeeded", func() {
-			Expect(s.Init()).Should(BeNil())
+			s.Init()
 			for _, tip := range tips {
-				Expect(s.Save(tip)).Should(BeNil())
+				s.Save(tip)
 			}
 			time.Sleep(saverInterval * time.Second)
-			Expect(s.Close()).Should(BeNil())
-		})
-	})
-
-	Context("When try to save tip using not initiated saver", func() {
-		It("got error 'saver is not initiated'", func() {
-			Expect(s.Save(tips[0])).Should(MatchError(ContainSubstring("saver is not initiated")))
-		})
-	})
-
-	Context("When try to init saver twice", func() {
-		It("got error 'saver has been initiated already'", func() {
-			Expect(s.Init()).Should(BeNil())
-			Expect(s.Init()).Should(MatchError(ContainSubstring("saver has been initiated already")))
-			Expect(s.Close()).Should(BeNil())
-		})
-	})
-
-	Context("When try to close not initiated saver", func() {
-		It("got error 'saver is not initiated'", func() {
-			Expect(s.Close()).Should(MatchError(ContainSubstring("saver is not initiated")))
+			s.Close()
 		})
 	})
 })
