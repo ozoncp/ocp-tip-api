@@ -72,11 +72,8 @@ func (s *saver) Init() {
 
 // Close останавливает периодическое сохранение советов
 func (s *saver) Close() {
-	defer func() {
-		close(s.tipsChan)
-		close(s.sigChan)
-	}()
-	s.sigChan <- struct{}{}
+	close(s.tipsChan)
+	close(s.sigChan)
 }
 
 // NewSaver возвращает Saver с поддержкой переодического сохранения
