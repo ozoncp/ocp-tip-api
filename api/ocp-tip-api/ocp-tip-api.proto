@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.tip.api;
+
+option go_package = "github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api;ocp_tip_api";
+
+service OcpTipApi {
+
+  // Создает новый совет
+  rpc CreateTipV1(CreateTipV1Request) returns (CreateTipV1Response) {
+    option (google.api.http) = {
+      post: "/v1/tips"
+      body: "*"
+    };
+  }
+
+  // Возвращает описание совета
+  rpc DescribeTipV1(DescribeTipV1Request) returns (DescribeTipV1Response) {
+    option (google.api.http) = {
+      get: "/v1/tips/{Id}"
+    };
+  }
+
+  // Возвращает список советов
+  rpc ListTipsV1(ListTipsV1Request) returns (ListTipsV1Response) {
+    option (google.api.http) = {
+      get: "/v1/tips"
+    };
+  }
+
+  // Удаляет совет
+  rpc RemoveTipV1(RemoveTipV1Request) returns (RemoveTipV1Response) {
+    option (google.api.http) = {
+      delete: "/v1/tips/{Id}"
+    };
+  }
+}
+
+message CreateTipV1Request {
+  uint64 UserId = 1 [(validate.rules).uint64.gt = 0];
+  uint64 ProblemId = 2 [(validate.rules).uint64.gt = 0];
+  string Text = 3;
+}
+
+message CreateTipV1Response {
+  uint64 Id = 1;
+}
+
+message DescribeTipV1Request {
+  uint64 Id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeTipV1Response {
+  TipV1 Tip = 1;
+}
+
+message ListTipsV1Request {
+  uint64 Limit = 1 [(validate.rules).uint64.gt = 0];
+  uint64 Offset = 2 [(validate.rules).uint64.gt = 0];
+}
+
+message ListTipsV1Response {
+  repeated TipV1 Tips = 1;
+}
+
+message RemoveTipV1Request {
+  uint64 Id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveTipV1Response {
+  bool Found = 1;
+}
+
+message TipV1 {
+  uint64 Id = 1;
+  uint64 UserId = 2;
+  uint64 ProblemId = 3;
+  string Text = 4;
+}

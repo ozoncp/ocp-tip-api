@@ -1,0 +1,254 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/ocp-tip-api/ocp-tip-api.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/tips": {
+      "get": {
+        "summary": "Возвращает список советов",
+        "operationId": "OcpTipApi_ListTipsV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiListTipsV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
+      },
+      "post": {
+        "summary": "Создает новый совет",
+        "operationId": "OcpTipApi_CreateTipV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiCreateTipV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCreateTipV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
+      }
+    },
+    "/v1/tips/{Id}": {
+      "get": {
+        "summary": "Возвращает описание совета",
+        "operationId": "OcpTipApi_DescribeTipV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiDescribeTipV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
+      },
+      "delete": {
+        "summary": "Удаляет совет",
+        "operationId": "OcpTipApi_RemoveTipV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiRemoveTipV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiCreateTipV1Request": {
+      "type": "object",
+      "properties": {
+        "UserId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
+    "apiCreateTipV1Response": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "apiDescribeTipV1Response": {
+      "type": "object",
+      "properties": {
+        "Tip": {
+          "$ref": "#/definitions/apiTipV1"
+        }
+      }
+    },
+    "apiListTipsV1Response": {
+      "type": "object",
+      "properties": {
+        "Tips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiTipV1"
+          }
+        }
+      }
+    },
+    "apiRemoveTipV1Response": {
+      "type": "object",
+      "properties": {
+        "Found": {
+          "type": "boolean"
+        }
+      }
+    },
+    "apiTipV1": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "UserId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
