@@ -9,8 +9,10 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.10.1
+	github.com/pressly/goose/v3 v3.0.1 // indirect
 	github.com/rs/zerolog v1.23.0
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -20,6 +22,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace (
-	github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api => ./pkg/ocp-tip-api
-)
+replace github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api => ./pkg/ocp-tip-api
