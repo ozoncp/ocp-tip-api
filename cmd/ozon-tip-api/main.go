@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-tip-api/internal/api"
+	"github.com/ozoncp/ocp-tip-api/internal/db"
+	"github.com/ozoncp/ocp-tip-api/internal/repo"
 	desc "github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api"
 	"google.golang.org/grpc"
 	"log"
@@ -17,14 +20,14 @@ const (
 	httpPort           = ":8081"
 )
 
-func run() error {
+func run(dbConn *sqlx.DB) error {
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	desc.RegisterOcpTipApiServer(s, api.NewOcpTipApi())
+	desc.RegisterOcpTipApiServer(s, api.NewOcpTipApi(repo.NewRepo(dbConn)))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -55,7 +58,12 @@ func runJSON() {
 func main() {
 	go runJSON()
 
-	if err := run(); err != nil {
+	dbConn, err := db.Connect("postgres://postgres:postgres@localhost:5432/ocp_tip_api?sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := run(dbConn); err != nil {
 		log.Fatal(err)
 	}
 }

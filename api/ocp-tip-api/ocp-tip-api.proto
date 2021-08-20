@@ -59,7 +59,7 @@ message DescribeTipV1Response {
 
 message ListTipsV1Request {
   uint64 Limit = 1 [(validate.rules).uint64.gt = 0];
-  uint64 Offset = 2 [(validate.rules).uint64.gt = 0];
+  uint64 Offset = 2;
 }
 
 message ListTipsV1Response {
