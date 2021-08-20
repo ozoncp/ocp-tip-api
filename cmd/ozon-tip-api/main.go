@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-tip-api/internal/api"
+	configuration "github.com/ozoncp/ocp-tip-api/internal/config"
 	"github.com/ozoncp/ocp-tip-api/internal/db"
 	"github.com/ozoncp/ocp-tip-api/internal/repo"
 	desc "github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api"
@@ -58,7 +60,11 @@ func runJSON() {
 func main() {
 	go runJSON()
 
-	dbConn, err := db.Connect("postgres://postgres:postgres@localhost:5432/ocp_tip_api?sslmode=disable")
+	config := configuration.GetConfig()
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		config.DbUser, config.DbPass, config.DbHost, config.DbPort, config.DbName)
+	dbConn, err := db.Connect(dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
