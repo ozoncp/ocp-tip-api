@@ -49,7 +49,7 @@ var _ = Describe("Flusher", func() {
 
 	Context("When all tips was flushed successfully", func() {
 		It("returned value is nil", func() {
-			mockRepo.EXPECT().AddTips(gomock.Any()).Return(nil).AnyTimes()
+			mockRepo.EXPECT().AddTips(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			result = f.Flush(tips)
 			Expect(result).Should(BeNil())
 		})
@@ -58,9 +58,9 @@ var _ = Describe("Flusher", func() {
 	Context("When error was occurred while flushing tips", func() {
 		It("returned slice of tips that have not been flushed", func() {
 			gomock.InOrder(
-				mockRepo.EXPECT().AddTips(gomock.Any()).Return(nil).Times(batchesCount/3),
-				mockRepo.EXPECT().AddTips(gomock.Any()).Return(errors.New("unknown error")).Times(batchesCount/3),
-				mockRepo.EXPECT().AddTips(gomock.Any()).Return(nil).AnyTimes(),
+				mockRepo.EXPECT().AddTips(gomock.Any(), gomock.Any()).Return(nil).Times(batchesCount/3),
+				mockRepo.EXPECT().AddTips(gomock.Any(), gomock.Any()).Return(errors.New("unknown error")).Times(batchesCount/3),
+				mockRepo.EXPECT().AddTips(gomock.Any(), gomock.Any()).Return(nil).AnyTimes(),
 			)
 			result = f.Flush(tips)
 			start := batchesCount / 3 * batchSize
