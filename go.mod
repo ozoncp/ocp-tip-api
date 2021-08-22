@@ -11,6 +11,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/jmoiron/sqlx v1.3.4
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lyft/protoc-gen-star v0.5.3 // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.10.1

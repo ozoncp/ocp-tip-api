@@ -1,34 +1,26 @@
 package config
 
-import "os"
+import (
+	"github.com/kelseyhightower/envconfig"
+)
 
 type DbConfig struct {
-	DbHost string
-	DbPort string
-	DbUser string
-	DbPass string
-	DbName string
+	DbHost string `default:"localhost"`
+	DbPort string `default:"5432"`
+	DbUser string `default:"postgres"`
+	DbPass string `default:"postgres"`
+	DbName string `default:"ocp_tip_api"`
 }
 
 type Config struct {
 	DbConfig
 }
 
-func GetConfig() *Config {
-	return &Config{
-		DbConfig{
-			DbHost: getEnv("DB_HOST", "localhost"),
-			DbPort: getEnv("DB_PORT", "5432"),
-			DbUser: getEnv("DB_USER", "postgres"),
-			DbPass: getEnv("DB_PASSWORD", "postgres"),
-			DbName: getEnv("DB_NAME", "ocp_tip_api"),
-		},
+func GetConfig() (*Config, error) {
+	var d DbConfig
+	err := envconfig.Process("tip", &d)
+	if err != nil {
+		return nil, err
 	}
-}
-
-func getEnv(key string, defultValue string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return defultValue
+	return &Config{d}, nil
 }

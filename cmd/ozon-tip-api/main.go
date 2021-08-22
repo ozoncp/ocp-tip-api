@@ -60,7 +60,10 @@ func runJSON() {
 func main() {
 	go runJSON()
 
-	config := configuration.GetConfig()
+	config, err := configuration.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		config.DbUser, config.DbPass, config.DbHost, config.DbPort, config.DbName)
