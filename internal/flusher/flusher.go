@@ -21,7 +21,7 @@ type flusher struct {
 func (f *flusher) Flush(tips []models.Tip) []models.Tip {
 	notFlushedTips := make([]models.Tip, 0, len(tips))
 	for _, batch := range utils.SplitTipsByBatches(tips, f.batchSize) {
-		if err := f.repo.AddTips(context.TODO(), batch); err != nil {
+		if err := f.repo.AddTips(context.Background(), batch); err != nil {
 			notFlushedTips = append(notFlushedTips, batch...)
 		}
 	}
