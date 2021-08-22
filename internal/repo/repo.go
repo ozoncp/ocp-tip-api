@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
 	"strings"
@@ -21,7 +22,7 @@ type repo struct {
 }
 
 func (r *repo) AddTip(ctx context.Context, tip models.Tip) (uint64, error) {
-	query := "INSERT INTO tips(user_id, problem_id, text) VALUES ($, $, $) RETURNING id"
+	query := "INSERT INTO tips(user_id, problem_id, text) VALUES ($1, $2, $3) RETURNING id"
 	row := r.db.QueryRowContext(ctx, query, tip.UserId, tip.ProblemId, tip.Text)
 
 	var id uint64
@@ -35,8 +36,8 @@ func (r *repo) AddTips(ctx context.Context, tips []models.Tip) error {
 	query := "INSERT INTO tips(user_id, problem_id, text) VALUES "
 	placeholders := make([]string, 0, len(tips)*3)
 	values := make([]interface{}, 0, len(tips)*3)
-	for _, tip := range tips {
-		placeholders = append(placeholders, "($,$,$)")
+	for i, tip := range tips {
+		placeholders = append(placeholders, fmt.Sprintf("($%d,$%d,$%d)", i*3+1, i*3+2, i*3+3))
 		values = append(values, tip.UserId, tip.ProblemId, tip.Text)
 	}
 	query += strings.Join(placeholders, ",")
