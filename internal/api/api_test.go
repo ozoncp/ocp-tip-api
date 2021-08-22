@@ -126,8 +126,7 @@ var _ = Describe("API", func() {
 			for _, tip := range tips {
 				rows = rows.AddRow(tip.Id, tip.UserId, tip.ProblemId, tip.Text)
 			}
-			mock.ExpectQuery(
-				fmt.Sprintf("SELECT id, user_id, problem_id, text FROM tips LIMIT %d OFFSET %d", limit, offset)).
+			mock.ExpectQuery("SELECT id, user_id, problem_id, text FROM tips").
 				WillReturnRows(rows)
 			res, err := tipApi.ListTipsV1(ctx, req)
 			Expect(err).Should(BeNil())
@@ -140,8 +139,7 @@ var _ = Describe("API", func() {
 		})
 
 		It("Empty list", func() {
-			mock.ExpectQuery(
-				fmt.Sprintf("SELECT id, user_id, problem_id, text FROM tips LIMIT %d OFFSET %d", limit, offset)).
+			mock.ExpectQuery("SELECT id, user_id, problem_id, text FROM tips").
 				WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "problem_id", "text"}))
 			res, err := tipApi.ListTipsV1(ctx, req)
 			Expect(err).Should(BeNil())
@@ -149,8 +147,7 @@ var _ = Describe("API", func() {
 		})
 
 		It("Failed retrieve", func() {
-			mock.ExpectQuery(
-				fmt.Sprintf("SELECT id, user_id, problem_id, text FROM tips LIMIT %d OFFSET %d", limit, offset)).
+			mock.ExpectQuery("SELECT id, user_id, problem_id, text FROM tips").
 				WillReturnError(errors.New("some error"))
 			res, err := tipApi.ListTipsV1(ctx, req)
 			Expect(err.Error()).Should(ContainSubstring("some error"))

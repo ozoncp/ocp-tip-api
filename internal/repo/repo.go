@@ -2,12 +2,10 @@ package repo
 
 import (
 	"context"
-	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
+	"strings"
 )
-
-const tableName = "tips"
 
 // Repo - интерфейс хранилища для сущности Tip
 type Repo interface {
@@ -23,48 +21,43 @@ type repo struct {
 }
 
 func (r *repo) AddTip(ctx context.Context, tip models.Tip) (uint64, error) {
-	query := sq.Insert(tableName).
-		Columns("user_id", "problem_id", "text").
-		Values(tip.UserId, tip.ProblemId, tip.Text).
-		Suffix("RETURNING \"id\"").
-		RunWith(r.db).
-		PlaceholderFormat(sq.Dollar)
+	query := "INSERT INTO tips(user_id, problem_id, text) VALUES ($, $, $) RETURNING id"
+	row := r.db.QueryRowContext(ctx, query, tip.UserId, tip.ProblemId, tip.Text)
 
-	if err := query.QueryRow().Scan(&tip.Id); err != nil {
+	var id uint64
+	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
-
-	return tip.Id, nil
+	return id, nil
 }
 
 func (r *repo) AddTips(ctx context.Context, tips []models.Tip) error {
-	query := sq.Insert(tableName).
-		Columns("user_id", "problem_id", "text").
-		RunWith(r.db).
-		PlaceholderFormat(sq.Dollar)
-
+	query := "INSERT INTO tips(user_id, problem_id, text) VALUES "
+	placeholders := make([]string, 0, len(tips)*3)
+	values := make([]interface{}, 0, len(tips)*3)
 	for _, tip := range tips {
-		query = query.Values(tip.UserId, tip.ProblemId, tip.Text)
+		placeholders = append(placeholders, "($,$,$)")
+		values = append(values, tip.UserId, tip.ProblemId, tip.Text)
 	}
-
-	_, err := query.ExecContext(ctx)
+	query += strings.Join(placeholders, ",")
+	_, err := r.db.ExecContext(ctx, query, values...)
 	return err
+
 }
 
-func (r *repo) ListTips(ctx context.Context, limit, offset uint64) ([]models.Tip, error) {
-	query := sq.Select("id", "user_id", "problem_id", "text").
-		From(tableName).
-		RunWith(r.db).
-		Limit(limit).
-		Offset(offset).
-		PlaceholderFormat(sq.Dollar)
-
-	rows, err := query.QueryContext(ctx)
+func (r *repo) ListTips(ctx context.Context, limit, offset uint64) (tips []models.Tip, err error) {
+	query := "SELECT id, user_id, problem_id, text FROM tips LIMIT $1 OFFSET $2"
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	var tips []models.Tip
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			tips = nil
+		}
+	}()
 
 	for rows.Next() {
 		var tip models.Tip
@@ -73,34 +66,26 @@ func (r *repo) ListTips(ctx context.Context, limit, offset uint64) ([]models.Tip
 		}
 		tips = append(tips, tip)
 	}
-
 	return tips, nil
 }
 
 func (r *repo) DescribeTip(ctx context.Context, tipId uint64) (*models.Tip, error) {
-	query := sq.Select("id", "user_id", "problem_id", "text").
-		From(tableName).
-		Where(sq.Eq{"id": tipId}).
-		RunWith(r.db).
-		PlaceholderFormat(sq.Dollar)
-
+	query := "SELECT id, user_id, problem_id, text FROM tips WHERE id = $1"
+	row := r.db.QueryRowContext(ctx, query, tipId)
 	var tip models.Tip
-	if err := query.QueryRowContext(ctx).Scan(&tip.Id, &tip.UserId, &tip.ProblemId, &tip.Text); err != nil {
+	err := row.Scan(&tip.Id, &tip.UserId, &tip.ProblemId, &tip.Text)
+	if err != nil {
 		return nil, err
 	}
 	return &tip, nil
 }
 
 func (r *repo) RemoveTip(ctx context.Context, tipId uint64) (bool, error) {
-	query := sq.Delete(tableName).
-		Where(sq.Eq{"id": tipId}).
-		RunWith(r.db).
-		PlaceholderFormat(sq.Dollar)
-	res, err := query.ExecContext(ctx)
+	query := "DELETE FROM tips WHERE id = $1"
+	res, err := r.db.ExecContext(ctx, query, tipId)
 	if err != nil {
 		return false, err
 	}
-
 	rowsCount, err := res.RowsAffected()
 	if err != nil {
 		return false, err
