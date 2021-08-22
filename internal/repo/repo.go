@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
@@ -11,7 +12,8 @@ import (
 // Repo - интерфейс хранилища для сущности Tip
 type Repo interface {
 	AddTip(ctx context.Context, tip models.Tip) (uint64, error)
-	AddTips(ctx context.Context, tips []models.Tip) error
+	AddTips(ctx context.Context, tips []models.Tip) ([]uint64, error)
+	UpdateTip(ctx context.Context, tip models.Tip) error
 	ListTips(ctx context.Context, limit, offset uint64) ([]models.Tip, error)
 	DescribeTip(ctx context.Context, tipId uint64) (*models.Tip, error)
 	RemoveTip(ctx context.Context, tipId uint64) (bool, error)
@@ -32,7 +34,7 @@ func (r *repo) AddTip(ctx context.Context, tip models.Tip) (uint64, error) {
 	return id, nil
 }
 
-func (r *repo) AddTips(ctx context.Context, tips []models.Tip) error {
+func (r *repo) AddTips(ctx context.Context, tips []models.Tip) ([]uint64, error) {
 	query := "INSERT INTO tips(user_id, problem_id, text) VALUES "
 	placeholders := make([]string, 0, len(tips)*3)
 	values := make([]interface{}, 0, len(tips)*3)
@@ -41,9 +43,42 @@ func (r *repo) AddTips(ctx context.Context, tips []models.Tip) error {
 		values = append(values, tip.UserId, tip.ProblemId, tip.Text)
 	}
 	query += strings.Join(placeholders, ",")
-	_, err := r.db.ExecContext(ctx, query, values...)
-	return err
+	query += " RETURNING id"
+	rows, err := r.db.QueryContext(ctx, query, values...)
+	if err != nil {
+		return nil, err
+	}
 
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	ids := make([]uint64, 0, len(tips))
+	for rows.Next() {
+		var tipId uint64
+		if err := rows.Scan(&tipId); err != nil {
+			return nil, err
+		}
+		ids = append(ids, tipId)
+	}
+
+	return ids, nil
+}
+
+func (r *repo) UpdateTip(ctx context.Context, tip models.Tip) error {
+	query := "UPDATE tips SET user_id = $1, problem_id = $2, text = $3 WHERE id = $4"
+	res, err := r.db.ExecContext(ctx, query, tip.UserId, tip.ProblemId, tip.Text, tip.Id)
+	if err != nil {
+		return err
+	}
+	rowsCount, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsCount == 0 {
+		return errors.New("tip not found")
+	}
+	return nil
 }
 
 func (r *repo) ListTips(ctx context.Context, limit, offset uint64) (tips []models.Tip, err error) {

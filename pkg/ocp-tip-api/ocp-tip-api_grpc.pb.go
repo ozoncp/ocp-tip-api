@@ -20,6 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 type OcpTipApiClient interface {
 	// Создает новый совет
 	CreateTipV1(ctx context.Context, in *CreateTipV1Request, opts ...grpc.CallOption) (*CreateTipV1Response, error)
+	// Создает множество советов
+	MultiCreateTipV1(ctx context.Context, in *MultiCreateTipV1Request, opts ...grpc.CallOption) (*MultiCreateTipV1Response, error)
+	// Обновляет совет
+	UpdateTipV1(ctx context.Context, in *UpdateTipV1Request, opts ...grpc.CallOption) (*UpdateTipV1Response, error)
 	// Возвращает описание совета
 	DescribeTipV1(ctx context.Context, in *DescribeTipV1Request, opts ...grpc.CallOption) (*DescribeTipV1Response, error)
 	// Возвращает список советов
@@ -39,6 +43,24 @@ func NewOcpTipApiClient(cc grpc.ClientConnInterface) OcpTipApiClient {
 func (c *ocpTipApiClient) CreateTipV1(ctx context.Context, in *CreateTipV1Request, opts ...grpc.CallOption) (*CreateTipV1Response, error) {
 	out := new(CreateTipV1Response)
 	err := c.cc.Invoke(ctx, "/ocp.tip.api.OcpTipApi/CreateTipV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpTipApiClient) MultiCreateTipV1(ctx context.Context, in *MultiCreateTipV1Request, opts ...grpc.CallOption) (*MultiCreateTipV1Response, error) {
+	out := new(MultiCreateTipV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.tip.api.OcpTipApi/MultiCreateTipV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpTipApiClient) UpdateTipV1(ctx context.Context, in *UpdateTipV1Request, opts ...grpc.CallOption) (*UpdateTipV1Response, error) {
+	out := new(UpdateTipV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.tip.api.OcpTipApi/UpdateTipV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +100,10 @@ func (c *ocpTipApiClient) RemoveTipV1(ctx context.Context, in *RemoveTipV1Reques
 type OcpTipApiServer interface {
 	// Создает новый совет
 	CreateTipV1(context.Context, *CreateTipV1Request) (*CreateTipV1Response, error)
+	// Создает множество советов
+	MultiCreateTipV1(context.Context, *MultiCreateTipV1Request) (*MultiCreateTipV1Response, error)
+	// Обновляет совет
+	UpdateTipV1(context.Context, *UpdateTipV1Request) (*UpdateTipV1Response, error)
 	// Возвращает описание совета
 	DescribeTipV1(context.Context, *DescribeTipV1Request) (*DescribeTipV1Response, error)
 	// Возвращает список советов
@@ -93,6 +119,12 @@ type UnimplementedOcpTipApiServer struct {
 
 func (UnimplementedOcpTipApiServer) CreateTipV1(context.Context, *CreateTipV1Request) (*CreateTipV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTipV1 not implemented")
+}
+func (UnimplementedOcpTipApiServer) MultiCreateTipV1(context.Context, *MultiCreateTipV1Request) (*MultiCreateTipV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateTipV1 not implemented")
+}
+func (UnimplementedOcpTipApiServer) UpdateTipV1(context.Context, *UpdateTipV1Request) (*UpdateTipV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTipV1 not implemented")
 }
 func (UnimplementedOcpTipApiServer) DescribeTipV1(context.Context, *DescribeTipV1Request) (*DescribeTipV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeTipV1 not implemented")
@@ -130,6 +162,42 @@ func _OcpTipApi_CreateTipV1_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpTipApiServer).CreateTipV1(ctx, req.(*CreateTipV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpTipApi_MultiCreateTipV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateTipV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpTipApiServer).MultiCreateTipV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.tip.api.OcpTipApi/MultiCreateTipV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpTipApiServer).MultiCreateTipV1(ctx, req.(*MultiCreateTipV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpTipApi_UpdateTipV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTipV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpTipApiServer).UpdateTipV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.tip.api.OcpTipApi/UpdateTipV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpTipApiServer).UpdateTipV1(ctx, req.(*UpdateTipV1Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -198,6 +266,14 @@ var OcpTipApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTipV1",
 			Handler:    _OcpTipApi_CreateTipV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateTipV1",
+			Handler:    _OcpTipApi_MultiCreateTipV1_Handler,
+		},
+		{
+			MethodName: "UpdateTipV1",
+			Handler:    _OcpTipApi_UpdateTipV1_Handler,
 		},
 		{
 			MethodName: "DescribeTipV1",

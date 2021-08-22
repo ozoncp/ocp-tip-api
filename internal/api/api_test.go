@@ -3,9 +3,11 @@ package api_test
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
+	saramamock "github.com/Shopify/sarama/mocks"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,14 +21,17 @@ import (
 
 var _ = Describe("API", func() {
 	const tipsCount = 10
+	const batchSize = 3
+	const batchesCount = 4
 
 	var (
-		tips   []models.Tip
-		db     *sql.DB
-		mock   sqlmock.Sqlmock
-		ctx    context.Context
-		tipApi desc.OcpTipApiServer
-		err    error
+		tips         []models.Tip
+		db           *sql.DB
+		mock         sqlmock.Sqlmock
+		producerMock *saramamock.SyncProducer
+		ctx          context.Context
+		tipApi       desc.OcpTipApiServer
+		err          error
 	)
 
 	tips = make([]models.Tip, tipsCount)
@@ -44,7 +49,8 @@ var _ = Describe("API", func() {
 		db, mock, err = sqlmock.New()
 		Expect(err).Should(BeNil())
 		ctx = context.Background()
-		tipApi = api.NewOcpTipApi(repo.NewRepo(sqlx.NewDb(db, "sqlmock")))
+		producerMock = saramamock.NewSyncProducer(GinkgoT(), nil)
+		tipApi = api.NewOcpTipApi(repo.NewRepo(sqlx.NewDb(db, "sqlmock")), producerMock)
 	})
 
 	AfterEach(func() {
@@ -59,6 +65,7 @@ var _ = Describe("API", func() {
 			for _, tip := range tips {
 				rows := sqlmock.NewRows([]string{"id"}).AddRow(tip.Id)
 				mock.ExpectQuery("INSERT INTO tips").WithArgs(tip.UserId, tip.ProblemId, tip.Text).WillReturnRows(rows)
+				producerMock.ExpectSendMessageAndSucceed()
 				req := &desc.CreateTipV1Request{UserId: tip.UserId, ProblemId: tip.ProblemId, Text: tip.Text}
 				res, err := tipApi.CreateTipV1(ctx, req)
 				Expect(err).Should(BeNil())
@@ -73,6 +80,119 @@ var _ = Describe("API", func() {
 			req := &desc.CreateTipV1Request{UserId: tip.UserId, ProblemId: tip.ProblemId, Text: tip.Text}
 			res, err := tipApi.CreateTipV1(ctx, req)
 			Expect(err.Error()).Should(ContainSubstring("some error"))
+			Expect(res).Should(BeNil())
+		})
+	})
+
+	Context("Multi create tips", func() {
+		reqTips := make([]*desc.CreateTipV1Request, 0, tipsCount)
+		for _, tip := range tips {
+			reqTips = append(reqTips, &desc.CreateTipV1Request{
+				UserId:    tip.UserId,
+				ProblemId: tip.ProblemId,
+				Text:      tip.Text,
+			})
+		}
+		req := &desc.MultiCreateTipV1Request{Tips: reqTips, BatchSize: batchSize}
+
+		BeforeEach(func() {
+			mock.MatchExpectationsInOrder(false)
+		})
+
+		It("Successful create", func() {
+			createdIds := make([]uint64, 0, tipsCount)
+			for i := 0; i < batchesCount; i++ {
+				args := make([]driver.Value, 0, batchSize)
+				batchEnd := (i + 1) * batchSize
+				if batchEnd > tipsCount {
+					batchEnd = tipsCount
+				}
+				rows := sqlmock.NewRows([]string{"id"})
+				for _, tip := range tips[i*batchSize : batchEnd] {
+					args = append(args, driver.Value(tip.UserId), driver.Value(tip.ProblemId), driver.Value(tip.Text))
+					rows.AddRow(tip.Id)
+					createdIds = append(createdIds, tip.Id)
+					producerMock.ExpectSendMessageAndSucceed()
+				}
+				mock.ExpectQuery("INSERT INTO tips").WithArgs(args...).WillReturnRows(rows)
+				mock.ExpectClose()
+			}
+			res, err := tipApi.MultiCreateTipV1(ctx, req)
+			Expect(err).Should(BeNil())
+			Expect(res.Ids).Should(ContainElements(createdIds))
+			Expect(res.NotCreatedTips).Should(BeEmpty())
+		})
+
+		It("Some batches were not created", func() {
+			notCreatedTips := make([]*desc.CreateTipV1Request, 0)
+			createdIds := make([]uint64, 0, tipsCount)
+			for i := 0; i < batchesCount; i++ {
+				isSuccess := i%2 == 0
+				args := make([]driver.Value, 0, batchSize)
+				batchEnd := (i + 1) * batchSize
+				if batchEnd > tipsCount {
+					batchEnd = tipsCount
+				}
+				rows := sqlmock.NewRows([]string{"id"})
+				for _, tip := range tips[i*batchSize : batchEnd] {
+					args = append(args, driver.Value(tip.UserId), driver.Value(tip.ProblemId), driver.Value(tip.Text))
+					rows.AddRow(tip.Id)
+					if !isSuccess {
+						notCreatedTips = append(notCreatedTips, &desc.CreateTipV1Request{
+							UserId: tip.UserId, ProblemId: tip.ProblemId, Text: tip.Text,
+						})
+					} else {
+						producerMock.ExpectSendMessageAndSucceed()
+						createdIds = append(createdIds, tip.Id)
+					}
+				}
+				if isSuccess {
+					mock.ExpectQuery("INSERT INTO tips").WithArgs(args...).WillReturnRows(rows)
+				} else {
+					mock.ExpectQuery("INSERT INTO tips").WithArgs(args...).
+						WillReturnError(errors.New("some error"))
+				}
+				mock.ExpectClose()
+			}
+			//producerMock.ExpectSendMessageAndSucceed()
+			res, err := tipApi.MultiCreateTipV1(ctx, req)
+			Expect(err).Should(BeNil())
+			Expect(res.Ids).Should(ContainElements(createdIds))
+			Expect(res.NotCreatedTips).Should(ContainElements(notCreatedTips))
+		})
+	})
+
+	Context("Update tip", func() {
+		tip := tips[0]
+		req := &desc.UpdateTipV1Request{
+			Id:        tip.Id,
+			UserId:    tip.UserId + 1,
+			ProblemId: tip.ProblemId + 1,
+			Text:      "new text",
+		}
+
+		It("Successful update", func() {
+			mock.ExpectExec("UPDATE tips").WithArgs(req.UserId, req.ProblemId, req.Text, req.Id).
+				WillReturnResult(sqlmock.NewResult(int64(tip.Id), 1))
+			producerMock.ExpectSendMessageAndSucceed()
+			res, err := tipApi.UpdateTipV1(ctx, req)
+			Expect(err).Should(BeNil())
+			Expect(res).Should(Equal(&desc.UpdateTipV1Response{}))
+		})
+
+		It("Failed update", func() {
+			mock.ExpectExec("UPDATE tips").WithArgs(req.UserId, req.ProblemId, req.Text, req.Id).
+				WillReturnError(errors.New("some error"))
+			res, err := tipApi.UpdateTipV1(ctx, req)
+			Expect(err.Error()).Should(ContainSubstring("some error"))
+			Expect(res).Should(BeNil())
+		})
+
+		It("Update nonexistent tip", func() {
+			mock.ExpectExec("UPDATE tips").WithArgs(req.UserId, req.ProblemId, req.Text, req.Id).
+				WillReturnResult(sqlmock.NewResult(0, 0))
+			res, err := tipApi.UpdateTipV1(ctx, req)
+			Expect(err.Error()).Should(ContainSubstring("tip not found"))
 			Expect(res).Should(BeNil())
 		})
 	})
@@ -160,6 +280,7 @@ var _ = Describe("API", func() {
 		req := &desc.RemoveTipV1Request{Id: tip.Id}
 		It("Successful remove, tip found", func() {
 			mock.ExpectExec("DELETE FROM tips").WithArgs(tip.Id).WillReturnResult(sqlmock.NewResult(0, 1))
+			producerMock.ExpectSendMessageAndSucceed()
 			res, err := tipApi.RemoveTipV1(ctx, req)
 			Expect(err).Should(BeNil())
 			Expect(res.Found).Should(Equal(true))
@@ -167,6 +288,7 @@ var _ = Describe("API", func() {
 
 		It("Successful remove, tip not found", func() {
 			mock.ExpectExec("DELETE FROM tips").WithArgs(tip.Id).WillReturnResult(sqlmock.NewResult(0, 0))
+			producerMock.ExpectSendMessageAndSucceed()
 			res, err := tipApi.RemoveTipV1(ctx, req)
 			Expect(err).Should(BeNil())
 			Expect(res.Found).Should(Equal(false))
