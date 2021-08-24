@@ -351,12 +351,7 @@ func (m *ListTipsV1Request) Validate() error {
 		}
 	}
 
-	if m.GetOffset() <= 0 {
-		return ListTipsV1RequestValidationError{
-			field:  "Offset",
-			reason: "value must be greater than 0",
-		}
-	}
+	// no validation rules for Offset
 
 	return nil
 }
