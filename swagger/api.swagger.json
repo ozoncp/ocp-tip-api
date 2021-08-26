@@ -260,6 +260,22 @@
         }
       }
     },
+    "apiMultiCreateFailedTipV1": {
+      "type": "object",
+      "properties": {
+        "UserId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
     "apiMultiCreateTipV1Request": {
       "type": "object",
       "properties": {
@@ -268,10 +284,6 @@
           "items": {
             "$ref": "#/definitions/apiCreateTipV1Request"
           }
-        },
-        "BatchSize": {
-          "type": "string",
-          "format": "uint64"
         }
       }
     },
@@ -288,7 +300,7 @@
         "NotCreatedTips": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiCreateTipV1Request"
+            "$ref": "#/definitions/apiMultiCreateFailedTipV1"
           }
         }
       }

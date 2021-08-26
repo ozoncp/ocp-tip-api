@@ -208,8 +208,6 @@ func (m *MultiCreateTipV1Request) Validate() error {
 
 	}
 
-	// no validation rules for BatchSize
-
 	return nil
 }
 
@@ -268,6 +266,79 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MultiCreateTipV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateFailedTipV1 with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateFailedTipV1) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for UserId
+
+	// no validation rules for ProblemId
+
+	// no validation rules for Text
+
+	return nil
+}
+
+// MultiCreateFailedTipV1ValidationError is the validation error returned by
+// MultiCreateFailedTipV1.Validate if the designated constraints aren't met.
+type MultiCreateFailedTipV1ValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateFailedTipV1ValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateFailedTipV1ValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateFailedTipV1ValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateFailedTipV1ValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateFailedTipV1ValidationError) ErrorName() string {
+	return "MultiCreateFailedTipV1ValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateFailedTipV1ValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateFailedTipV1.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateFailedTipV1ValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateFailedTipV1ValidationError{}
 
 // Validate checks the field values on MultiCreateTipV1Response with the rules
 // defined in the proto definition for this message. If any rules are

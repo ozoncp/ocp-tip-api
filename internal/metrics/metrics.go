@@ -6,8 +6,8 @@ import (
 
 var cudCounter = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "tips_cud_operations_count",
-		Help: "Count of CUD operations for tips",
+		Name: "ocp_tip_api_successful_cud_requests_total",
+		Help: "Total number of successful CUD requests",
 	},
 	[]string{"operation"},
 )

@@ -14,6 +14,8 @@ import (
 	"unsafe"
 )
 
+const multiCreateBatchSize int = 50
+
 func (a *api) CreateTipV1(ctx context.Context, req *desc.CreateTipV1Request) (*desc.CreateTipV1Response, error) {
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -53,7 +55,7 @@ func (a *api) MultiCreateTipV1(ctx context.Context, req *desc.MultiCreateTipV1Re
 		close(createChan)
 	}()
 
-	batches := utils.SplitTipsByBatches(tips, int(req.BatchSize))
+	batches := utils.SplitTipsByBatches(tips, multiCreateBatchSize)
 	for idx, batch := range batches {
 		go func(i int, b []models.Tip) {
 			childSpan := tracer.StartSpan(fmt.Sprintf("batch %d", i), opentracing.ChildOf(span.Context()))
@@ -71,13 +73,13 @@ func (a *api) MultiCreateTipV1(ctx context.Context, req *desc.MultiCreateTipV1Re
 	}
 
 	createdIds := make([]uint64, 0, len(req.Tips))
-	var notCreatedTips []*desc.CreateTipV1Request
+	var notCreatedTips []*desc.MultiCreateFailedTipV1
 
 	for range batches {
 		select {
 		case failedBatch := <-errChan:
 			for _, tip := range failedBatch {
-				notCreatedTips = append(notCreatedTips, &desc.CreateTipV1Request{
+				notCreatedTips = append(notCreatedTips, &desc.MultiCreateFailedTipV1{
 					UserId:    tip.UserId,
 					ProblemId: tip.ProblemId,
 					Text:      tip.Text,

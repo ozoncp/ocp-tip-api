@@ -20,8 +20,8 @@ import (
 )
 
 var _ = Describe("API", func() {
-	const tipsCount = 10
-	const batchSize = 3
+	const tipsCount = 200
+	const batchSize = 50
 	const batchesCount = 4
 
 	var (
@@ -93,7 +93,7 @@ var _ = Describe("API", func() {
 				Text:      tip.Text,
 			})
 		}
-		req := &desc.MultiCreateTipV1Request{Tips: reqTips, BatchSize: batchSize}
+		req := &desc.MultiCreateTipV1Request{Tips: reqTips}
 
 		BeforeEach(func() {
 			mock.MatchExpectationsInOrder(false)
@@ -124,7 +124,7 @@ var _ = Describe("API", func() {
 		})
 
 		It("Some batches were not created", func() {
-			notCreatedTips := make([]*desc.CreateTipV1Request, 0)
+			notCreatedTips := make([]*desc.MultiCreateFailedTipV1, 0)
 			createdIds := make([]uint64, 0, tipsCount)
 			for i := 0; i < batchesCount; i++ {
 				isSuccess := i%2 == 0
@@ -138,7 +138,7 @@ var _ = Describe("API", func() {
 					args = append(args, driver.Value(tip.UserId), driver.Value(tip.ProblemId), driver.Value(tip.Text))
 					rows.AddRow(tip.Id)
 					if !isSuccess {
-						notCreatedTips = append(notCreatedTips, &desc.CreateTipV1Request{
+						notCreatedTips = append(notCreatedTips, &desc.MultiCreateFailedTipV1{
 							UserId: tip.UserId, ProblemId: tip.ProblemId, Text: tip.Text,
 						})
 					} else {

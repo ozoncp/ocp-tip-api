@@ -67,12 +67,17 @@ message CreateTipV1Response {
 
 message MultiCreateTipV1Request {
   repeated CreateTipV1Request Tips = 1;
-  uint64 BatchSize = 2;
+}
+
+message MultiCreateFailedTipV1 {
+  uint64 UserId = 1;
+  uint64 ProblemId = 2;
+  string Text = 3;
 }
 
 message MultiCreateTipV1Response {
   repeated uint64 Ids = 1;
-  repeated CreateTipV1Request NotCreatedTips = 2;
+  repeated MultiCreateFailedTipV1 NotCreatedTips = 2;
 }
 
 message UpdateTipV1Request {
