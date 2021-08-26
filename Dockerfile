@@ -35,5 +35,5 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /home/developer/go/src/github.com/ozoncp/ocp-tip-api/bin/ocp-tip-api .
 RUN chown root:root ocp-tip-api
-EXPOSE 82 8081
+EXPOSE 82 8081 9100
 CMD ["./ocp-tip-api"]

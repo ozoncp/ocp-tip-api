@@ -1,0 +1,59 @@
+version: "3.1"
+
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./.env
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    ports:
+      - "2181:2181"
+    env_file:
+      - ./.env
+
+  kafka:
+    image: confluentinc/cp-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "127.0.0.1:9094:9094"
+    env_file:
+      - ./.env
+
+  api:
+    build: .
+    restart: always
+    ports:
+      - "82:82"
+      - "8081:8081"
+      - "9100:9100"
+    depends_on:
+      - db
+      - kafka
+    env_file:
+      - ./.env
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    depends_on:
+      - api
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+volumes:
+  pg_data:

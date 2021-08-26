@@ -2,12 +2,19 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/opentracing/opentracing-go"
+	"github.com/ozoncp/ocp-tip-api/internal/metrics"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
+	"github.com/ozoncp/ocp-tip-api/internal/utils"
 	desc "github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"unsafe"
 )
+
+const multiCreateBatchSize int = 50
 
 func (a *api) CreateTipV1(ctx context.Context, req *desc.CreateTipV1Request) (*desc.CreateTipV1Response, error) {
 	if err := req.Validate(); err != nil {
@@ -20,13 +27,97 @@ func (a *api) CreateTipV1(ctx context.Context, req *desc.CreateTipV1Request) (*d
 		return nil, err
 	}
 
-	log.Info().
-		Uint64("UserId", req.UserId).
-		Uint64("ProblemId", req.ProblemId).
-		Str("Text", req.Text).
-		Msg("create tip")
-
+	_, _, sendErr := a.p.SendMessage(prepareMessage("create_tip", tipId))
+	if sendErr != nil {
+		log.Error().Err(sendErr)
+	}
+	metrics.IncCudCounter("create")
 	return &desc.CreateTipV1Response{Id: tipId}, nil
+}
+
+func (a *api) MultiCreateTipV1(ctx context.Context, req *desc.MultiCreateTipV1Request) (*desc.MultiCreateTipV1Response, error) {
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	tracer := opentracing.GlobalTracer()
+	span := tracer.StartSpan("MultiCreateTipV1")
+	defer span.Finish()
+
+	tips := make([]models.Tip, 0, len(req.Tips))
+	for _, reqTip := range req.Tips {
+		tips = append(tips, models.Tip{UserId: reqTip.UserId, ProblemId: reqTip.ProblemId, Text: reqTip.Text})
+	}
+	errChan := make(chan []models.Tip)
+	createChan := make(chan []uint64)
+	defer func() {
+		close(errChan)
+		close(createChan)
+	}()
+
+	batches := utils.SplitTipsByBatches(tips, multiCreateBatchSize)
+	for idx, batch := range batches {
+		go func(i int, b []models.Tip) {
+			childSpan := tracer.StartSpan(fmt.Sprintf("batch %d", i), opentracing.ChildOf(span.Context()))
+			ids, err := a.r.AddTips(ctx, b)
+			if err != nil {
+				log.Error().Err(err)
+				childSpan.SetTag("size", 0)
+				errChan <- b
+			} else {
+				childSpan.SetTag("size", unsafe.Sizeof(b))
+				createChan <- ids
+			}
+			childSpan.Finish()
+		}(idx, batch)
+	}
+
+	createdIds := make([]uint64, 0, len(req.Tips))
+	var notCreatedTips []*desc.MultiCreateFailedTipV1
+
+	for range batches {
+		select {
+		case failedBatch := <-errChan:
+			for _, tip := range failedBatch {
+				notCreatedTips = append(notCreatedTips, &desc.MultiCreateFailedTipV1{
+					UserId:    tip.UserId,
+					ProblemId: tip.ProblemId,
+					Text:      tip.Text,
+				})
+			}
+		case ids := <-createChan:
+			createdIds = append(createdIds, ids...)
+		}
+	}
+
+	for _, tipId := range createdIds {
+		_, _, sendErr := a.p.SendMessage(prepareMessage("create_tip", tipId))
+		if sendErr != nil {
+			log.Error().Err(sendErr)
+		}
+	}
+	if len(notCreatedTips) == 0 {
+		metrics.IncCudCounter("multi_create")
+	}
+	return &desc.MultiCreateTipV1Response{Ids: createdIds, NotCreatedTips: notCreatedTips}, nil
+}
+
+func (a *api) UpdateTipV1(ctx context.Context, req *desc.UpdateTipV1Request) (*desc.UpdateTipV1Response, error) {
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	err := a.r.UpdateTip(ctx, models.Tip{Id: req.Id, UserId: req.UserId, ProblemId: req.ProblemId, Text: req.Text})
+	if err != nil {
+		return nil, err
+	}
+
+	_, _, sendErr := a.p.SendMessage(prepareMessage("update_tip", req.Id))
+	if sendErr != nil {
+		log.Error().Err(sendErr)
+	}
+	metrics.IncCudCounter("update")
+	return &desc.UpdateTipV1Response{}, nil
 }
 
 func (a *api) DescribeTipV1(ctx context.Context, req *desc.DescribeTipV1Request) (*desc.DescribeTipV1Response, error) {
@@ -84,9 +175,10 @@ func (a *api) RemoveTipV1(ctx context.Context, req *desc.RemoveTipV1Request) (*d
 		return nil, err
 	}
 
-	log.Info().
-		Uint64("Id", req.Id).
-		Msg("remove tip")
-
+	_, _, sendErr := a.p.SendMessage(prepareMessage("delete_tip", req.Id))
+	if sendErr != nil {
+		log.Error().Err(sendErr)
+	}
+	metrics.IncCudCounter("delete")
 	return &desc.RemoveTipV1Response{Found: found}, nil
 }

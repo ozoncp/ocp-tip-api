@@ -17,6 +17,22 @@ service OcpTipApi {
     };
   }
 
+  // Создает множество советов
+  rpc MultiCreateTipV1(MultiCreateTipV1Request) returns (MultiCreateTipV1Response) {
+    option (google.api.http) = {
+      post: "/v1/tips/multi_create"
+      body: "*"
+    };
+  }
+
+  // Обновляет совет
+  rpc UpdateTipV1(UpdateTipV1Request) returns (UpdateTipV1Response) {
+    option (google.api.http) = {
+      post: "/v1/tips/{Id}"
+      body: "*"
+    };
+  }
+
   // Возвращает описание совета
   rpc DescribeTipV1(DescribeTipV1Request) returns (DescribeTipV1Response) {
     option (google.api.http) = {
@@ -47,6 +63,31 @@ message CreateTipV1Request {
 
 message CreateTipV1Response {
   uint64 Id = 1;
+}
+
+message MultiCreateTipV1Request {
+  repeated CreateTipV1Request Tips = 1;
+}
+
+message MultiCreateFailedTipV1 {
+  uint64 UserId = 1;
+  uint64 ProblemId = 2;
+  string Text = 3;
+}
+
+message MultiCreateTipV1Response {
+  repeated uint64 Ids = 1;
+  repeated MultiCreateFailedTipV1 NotCreatedTips = 2;
+}
+
+message UpdateTipV1Request {
+  uint64 Id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 UserId = 2 [(validate.rules).uint64.gt = 0];
+  uint64 ProblemId = 3 [(validate.rules).uint64.gt = 0];
+  string Text = 4;
+}
+
+message UpdateTipV1Response {
 }
 
 message DescribeTipV1Request {

@@ -185,6 +185,400 @@ var _ interface {
 	ErrorName() string
 } = CreateTipV1ResponseValidationError{}
 
+// Validate checks the field values on MultiCreateTipV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateTipV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetTips() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateTipV1RequestValidationError{
+					field:  fmt.Sprintf("Tips[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateTipV1RequestValidationError is the validation error returned by
+// MultiCreateTipV1Request.Validate if the designated constraints aren't met.
+type MultiCreateTipV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateTipV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateTipV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateTipV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateTipV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateTipV1RequestValidationError) ErrorName() string {
+	return "MultiCreateTipV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateTipV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateTipV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateTipV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateTipV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateFailedTipV1 with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateFailedTipV1) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for UserId
+
+	// no validation rules for ProblemId
+
+	// no validation rules for Text
+
+	return nil
+}
+
+// MultiCreateFailedTipV1ValidationError is the validation error returned by
+// MultiCreateFailedTipV1.Validate if the designated constraints aren't met.
+type MultiCreateFailedTipV1ValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateFailedTipV1ValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateFailedTipV1ValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateFailedTipV1ValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateFailedTipV1ValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateFailedTipV1ValidationError) ErrorName() string {
+	return "MultiCreateFailedTipV1ValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateFailedTipV1ValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateFailedTipV1.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateFailedTipV1ValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateFailedTipV1ValidationError{}
+
+// Validate checks the field values on MultiCreateTipV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateTipV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetNotCreatedTips() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateTipV1ResponseValidationError{
+					field:  fmt.Sprintf("NotCreatedTips[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateTipV1ResponseValidationError is the validation error returned by
+// MultiCreateTipV1Response.Validate if the designated constraints aren't met.
+type MultiCreateTipV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateTipV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateTipV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateTipV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateTipV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateTipV1ResponseValidationError) ErrorName() string {
+	return "MultiCreateTipV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateTipV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateTipV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateTipV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateTipV1ResponseValidationError{}
+
+// Validate checks the field values on UpdateTipV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateTipV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if m.GetId() <= 0 {
+		return UpdateTipV1RequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	if m.GetUserId() <= 0 {
+		return UpdateTipV1RequestValidationError{
+			field:  "UserId",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	if m.GetProblemId() <= 0 {
+		return UpdateTipV1RequestValidationError{
+			field:  "ProblemId",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	// no validation rules for Text
+
+	return nil
+}
+
+// UpdateTipV1RequestValidationError is the validation error returned by
+// UpdateTipV1Request.Validate if the designated constraints aren't met.
+type UpdateTipV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateTipV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateTipV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateTipV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateTipV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateTipV1RequestValidationError) ErrorName() string {
+	return "UpdateTipV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateTipV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateTipV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateTipV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateTipV1RequestValidationError{}
+
+// Validate checks the field values on UpdateTipV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateTipV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// UpdateTipV1ResponseValidationError is the validation error returned by
+// UpdateTipV1Response.Validate if the designated constraints aren't met.
+type UpdateTipV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateTipV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateTipV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateTipV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateTipV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateTipV1ResponseValidationError) ErrorName() string {
+	return "UpdateTipV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateTipV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateTipV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateTipV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateTipV1ResponseValidationError{}
+
 // Validate checks the field values on DescribeTipV1Request with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

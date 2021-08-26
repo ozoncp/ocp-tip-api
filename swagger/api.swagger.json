@@ -81,6 +81,39 @@
         ]
       }
     },
+    "/v1/tips/multi_create": {
+      "post": {
+        "summary": "Создает множество советов",
+        "operationId": "OcpTipApi_MultiCreateTipV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateTipV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateTipV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
+      }
+    },
     "/v1/tips/{Id}": {
       "get": {
         "summary": "Возвращает описание совета",
@@ -141,6 +174,44 @@
         "tags": [
           "OcpTipApi"
         ]
+      },
+      "post": {
+        "summary": "Обновляет совет",
+        "operationId": "OcpTipApi_UpdateTipV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiUpdateTipV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiUpdateTipV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpTipApi"
+        ]
       }
     }
   },
@@ -189,6 +260,51 @@
         }
       }
     },
+    "apiMultiCreateFailedTipV1": {
+      "type": "object",
+      "properties": {
+        "UserId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
+    "apiMultiCreateTipV1Request": {
+      "type": "object",
+      "properties": {
+        "Tips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCreateTipV1Request"
+          }
+        }
+      }
+    },
+    "apiMultiCreateTipV1Response": {
+      "type": "object",
+      "properties": {
+        "Ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          }
+        },
+        "NotCreatedTips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiMultiCreateFailedTipV1"
+          }
+        }
+      }
+    },
     "apiRemoveTipV1Response": {
       "type": "object",
       "properties": {
@@ -216,6 +332,29 @@
           "type": "string"
         }
       }
+    },
+    "apiUpdateTipV1Request": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "UserId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ProblemId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "Text": {
+          "type": "string"
+        }
+      }
+    },
+    "apiUpdateTipV1Response": {
+      "type": "object"
     },
     "protobufAny": {
       "type": "object",

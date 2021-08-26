@@ -51,11 +51,12 @@ func (mr *MockRepoMockRecorder) AddTip(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // AddTips mocks base method.
-func (m *MockRepo) AddTips(arg0 context.Context, arg1 []models.Tip) error {
+func (m *MockRepo) AddTips(arg0 context.Context, arg1 []models.Tip) ([]uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTips", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].([]uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddTips indicates an expected call of AddTips.
@@ -107,4 +108,18 @@ func (m *MockRepo) RemoveTip(arg0 context.Context, arg1 uint64) (bool, error) {
 func (mr *MockRepoMockRecorder) RemoveTip(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTip", reflect.TypeOf((*MockRepo)(nil).RemoveTip), arg0, arg1)
+}
+
+// UpdateTip mocks base method.
+func (m *MockRepo) UpdateTip(arg0 context.Context, arg1 models.Tip) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTip", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTip indicates an expected call of UpdateTip.
+func (mr *MockRepoMockRecorder) UpdateTip(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTip", reflect.TypeOf((*MockRepo)(nil).UpdateTip), arg0, arg1)
 }
