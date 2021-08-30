@@ -8,6 +8,7 @@ require (
 	github.com/Shopify/sarama v1.29.1
 	github.com/golang/mock v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40 // indirect
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/kelseyhightower/envconfig v1.4.0

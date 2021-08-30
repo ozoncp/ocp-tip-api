@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing/opentracing-go"
 	"github.com/ozoncp/ocp-tip-api/internal/api"
 	configuration "github.com/ozoncp/ocp-tip-api/internal/config"
@@ -23,11 +24,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 )
 
 const (
 	grpcPort           = ":82"
 	grpcServerEndpoint = "localhost:82"
+	healthPort         = ":8086"
 	httpPort           = ":8081"
 	metricsPort        = ":9100"
 )
@@ -146,6 +149,16 @@ func main() {
 		if err := grpcServer.Serve(listen); err != nil {
 			log.Fatal(err)
 		}
+	}()
+
+	health := healthcheck.NewHandler()
+	health.AddLivenessCheck("ok", func() error {
+		return nil
+	})
+	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(dbConn.DB, 1*time.Second))
+
+	go func() {
+		_ = http.ListenAndServe(healthPort, health)
 	}()
 
 	stop := make(chan os.Signal)
