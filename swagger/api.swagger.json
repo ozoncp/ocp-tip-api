@@ -43,6 +43,12 @@
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "SearchQuery",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

@@ -146,7 +146,7 @@ func (a *api) ListTipsV1(ctx context.Context, req *desc.ListTipsV1Request) (*des
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	tips, err := a.r.ListTips(ctx, req.Limit, req.Offset)
+	tips, err := a.r.ListTips(ctx, req.Limit, req.Offset, req.SearchQuery)
 	if err != nil {
 		return nil, err
 	}

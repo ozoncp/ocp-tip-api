@@ -747,6 +747,8 @@ func (m *ListTipsV1Request) Validate() error {
 
 	// no validation rules for Offset
 
+	// no validation rules for SearchQuery
+
 	return nil
 }
 
