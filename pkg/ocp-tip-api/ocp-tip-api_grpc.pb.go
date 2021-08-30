@@ -30,6 +30,8 @@ type OcpTipApiClient interface {
 	ListTipsV1(ctx context.Context, in *ListTipsV1Request, opts ...grpc.CallOption) (*ListTipsV1Response, error)
 	// Удаляет совет
 	RemoveTipV1(ctx context.Context, in *RemoveTipV1Request, opts ...grpc.CallOption) (*RemoveTipV1Response, error)
+	// Служебная информация о сервисе
+	ServiceInfoV1(ctx context.Context, in *ServiceInfoV1Request, opts ...grpc.CallOption) (*ServiceInfoV1Response, error)
 }
 
 type ocpTipApiClient struct {
@@ -94,6 +96,15 @@ func (c *ocpTipApiClient) RemoveTipV1(ctx context.Context, in *RemoveTipV1Reques
 	return out, nil
 }
 
+func (c *ocpTipApiClient) ServiceInfoV1(ctx context.Context, in *ServiceInfoV1Request, opts ...grpc.CallOption) (*ServiceInfoV1Response, error) {
+	out := new(ServiceInfoV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.tip.api.OcpTipApi/ServiceInfoV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OcpTipApiServer is the server API for OcpTipApi service.
 // All implementations must embed UnimplementedOcpTipApiServer
 // for forward compatibility
@@ -110,6 +121,8 @@ type OcpTipApiServer interface {
 	ListTipsV1(context.Context, *ListTipsV1Request) (*ListTipsV1Response, error)
 	// Удаляет совет
 	RemoveTipV1(context.Context, *RemoveTipV1Request) (*RemoveTipV1Response, error)
+	// Служебная информация о сервисе
+	ServiceInfoV1(context.Context, *ServiceInfoV1Request) (*ServiceInfoV1Response, error)
 	mustEmbedUnimplementedOcpTipApiServer()
 }
 
@@ -134,6 +147,9 @@ func (UnimplementedOcpTipApiServer) ListTipsV1(context.Context, *ListTipsV1Reque
 }
 func (UnimplementedOcpTipApiServer) RemoveTipV1(context.Context, *RemoveTipV1Request) (*RemoveTipV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveTipV1 not implemented")
+}
+func (UnimplementedOcpTipApiServer) ServiceInfoV1(context.Context, *ServiceInfoV1Request) (*ServiceInfoV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ServiceInfoV1 not implemented")
 }
 func (UnimplementedOcpTipApiServer) mustEmbedUnimplementedOcpTipApiServer() {}
 
@@ -256,6 +272,24 @@ func _OcpTipApi_RemoveTipV1_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OcpTipApi_ServiceInfoV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ServiceInfoV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpTipApiServer).ServiceInfoV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.tip.api.OcpTipApi/ServiceInfoV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpTipApiServer).ServiceInfoV1(ctx, req.(*ServiceInfoV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OcpTipApi_ServiceDesc is the grpc.ServiceDesc for OcpTipApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -286,6 +320,10 @@ var OcpTipApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveTipV1",
 			Handler:    _OcpTipApi_RemoveTipV1_Handler,
+		},
+		{
+			MethodName: "ServiceInfoV1",
+			Handler:    _OcpTipApi_ServiceInfoV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

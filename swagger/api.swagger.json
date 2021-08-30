@@ -11,6 +11,29 @@
     "application/json"
   ],
   "paths": {
+    "/v1/service_info": {
+      "get": {
+        "summary": "Служебная информация о сервисе",
+        "operationId": "OcpTipApi_ServiceInfoV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiServiceInfoV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "OcpTipApi"
+        ]
+      }
+    },
     "/v1/tips": {
       "get": {
         "summary": "Возвращает список советов",
@@ -316,6 +339,20 @@
       "properties": {
         "Found": {
           "type": "boolean"
+        }
+      }
+    },
+    "apiServiceInfoV1Response": {
+      "type": "object",
+      "properties": {
+        "Release": {
+          "type": "string"
+        },
+        "Commit": {
+          "type": "string"
+        },
+        "BuildTime": {
+          "type": "string"
         }
       }
     },

@@ -1,3 +1,7 @@
+RELEASE?=$(shell git describe --tags --candidates=1 | grep -P '\d+\.\d+\.\d+' -o)
+COMMIT?=$(shell git rev-parse --short HEAD)
+BUILD_TIME?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
+
 .PHONY: build
 build: vendor-proto .generate .build
 
@@ -20,7 +24,11 @@ build: vendor-proto .generate .build
 
 .PHONY: .build
 .build:
-		CGO_ENABLED=0 GOOS=linux go build -o bin/ocp-tip-api cmd/ozon-tip-api/main.go
+		CGO_ENABLED=0 GOOS=linux go build \
+                -ldflags "-s -w -X github.com/ozoncp/ocp-tip-api/internal/version.Release=${RELEASE} \
+                -X github.com/ozoncp/ocp-tip-api/internal/version.Commit=${COMMIT} \
+                -X github.com/ozoncp/ocp-tip-api/internal/version.BuildTime=${BUILD_TIME}" \
+                -o bin/ocp-tip-api cmd/ozon-tip-api/main.go
 
 .PHONY: install
 install: build .install

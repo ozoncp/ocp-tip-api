@@ -53,6 +53,13 @@ service OcpTipApi {
       delete: "/v1/tips/{Id}"
     };
   }
+
+  // Служебная информация о сервисе
+  rpc ServiceInfoV1(ServiceInfoV1Request) returns (ServiceInfoV1Response) {
+    option (google.api.http) = {
+      get: "/v1/service_info"
+    };
+  }
 }
 
 message CreateTipV1Request {
@@ -121,4 +128,14 @@ message TipV1 {
   uint64 UserId = 2;
   uint64 ProblemId = 3;
   string Text = 4;
+}
+
+message ServiceInfoV1Request {
+
+}
+
+message ServiceInfoV1Response {
+  string Release = 1;
+  string Commit = 2;
+  string BuildTime = 3;
 }

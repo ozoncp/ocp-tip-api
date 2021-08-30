@@ -1104,3 +1104,143 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = TipV1ValidationError{}
+
+// Validate checks the field values on ServiceInfoV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ServiceInfoV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ServiceInfoV1RequestValidationError is the validation error returned by
+// ServiceInfoV1Request.Validate if the designated constraints aren't met.
+type ServiceInfoV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ServiceInfoV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ServiceInfoV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ServiceInfoV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ServiceInfoV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ServiceInfoV1RequestValidationError) ErrorName() string {
+	return "ServiceInfoV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ServiceInfoV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sServiceInfoV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ServiceInfoV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ServiceInfoV1RequestValidationError{}
+
+// Validate checks the field values on ServiceInfoV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ServiceInfoV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Release
+
+	// no validation rules for Commit
+
+	// no validation rules for BuildTime
+
+	return nil
+}
+
+// ServiceInfoV1ResponseValidationError is the validation error returned by
+// ServiceInfoV1Response.Validate if the designated constraints aren't met.
+type ServiceInfoV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ServiceInfoV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ServiceInfoV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ServiceInfoV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ServiceInfoV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ServiceInfoV1ResponseValidationError) ErrorName() string {
+	return "ServiceInfoV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ServiceInfoV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sServiceInfoV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ServiceInfoV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ServiceInfoV1ResponseValidationError{}
