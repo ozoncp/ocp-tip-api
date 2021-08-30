@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/jmoiron/sqlx"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/opentracing/opentracing-go"
 	"github.com/ozoncp/ocp-tip-api/internal/api"
 	configuration "github.com/ozoncp/ocp-tip-api/internal/config"
@@ -22,30 +22,18 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 const (
 	grpcPort           = ":82"
 	grpcServerEndpoint = "localhost:82"
+	healthPort         = ":8086"
 	httpPort           = ":8081"
 	metricsPort        = ":9100"
 )
-
-func run(dbConn *sqlx.DB, producer sarama.SyncProducer) error {
-	listen, err := net.Listen("tcp", grpcPort)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	s := grpc.NewServer()
-	desc.RegisterOcpTipApiServer(s, api.NewOcpTipApi(repo.NewRepo(dbConn), producer))
-
-	if err := s.Serve(listen); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-
-	return nil
-}
 
 func newProducer(brokers []string) (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
@@ -57,31 +45,29 @@ func newProducer(brokers []string) (sarama.SyncProducer, error) {
 	return producer, err
 }
 
-func runJSON() {
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+func newGrpcGatewayServer(ctx context.Context) (*http.Server, error) {
 
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 
 	err := desc.RegisterOcpTipApiHandlerFromEndpoint(ctx, mux, grpcServerEndpoint, opts)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	err = http.ListenAndServe(httpPort, mux)
-	if err != nil {
-		panic(err)
-	}
+	return &http.Server{
+		Addr:    httpPort,
+		Handler: mux,
+	}, nil
 }
 
-func runMetrics() {
-	metrics.RegisterMetrics()
-	http.Handle("/metrics", promhttp.Handler())
-	err := http.ListenAndServe(metricsPort, nil)
-	if err != nil {
-		panic(err)
+func newMetricsServer() *http.Server {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	return &http.Server{
+		Addr:    metricsPort,
+		Handler: mux,
 	}
 }
 
@@ -112,8 +98,8 @@ func initTracing(jaegerHost string) {
 }
 
 func main() {
-	go runJSON()
-	go runMetrics()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	config, err := configuration.GetConfig()
 	if err != nil {
@@ -127,13 +113,66 @@ func main() {
 		log.Fatal(err)
 	}
 
+	metricsServer := newMetricsServer()
+	go func() {
+		metrics.RegisterMetrics()
+		if err := metricsServer.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	grpcGatewayServer, err := newGrpcGatewayServer(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		if err := grpcGatewayServer.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	producer, err := newProducer(config.Brokers)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	initTracing(config.JaegerAgentHostPort)
-	if err := run(dbConn, producer); err != nil {
+
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
 		log.Fatal(err)
 	}
+
+	grpcServer := grpc.NewServer()
+	desc.RegisterOcpTipApiServer(grpcServer, api.NewOcpTipApi(repo.NewRepo(dbConn), producer))
+	go func() {
+		if err := grpcServer.Serve(listen); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	health := healthcheck.NewHandler()
+	health.AddLivenessCheck("ok", func() error {
+		return nil
+	})
+	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(dbConn.DB, 1*time.Second))
+
+	go func() {
+		_ = http.ListenAndServe(healthPort, health)
+	}()
+
+	stop := make(chan os.Signal)
+	signal.Notify(stop, os.Interrupt)
+
+	<-stop
+
+	if err := metricsServer.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := grpcGatewayServer.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	grpcServer.GracefulStop()
 }

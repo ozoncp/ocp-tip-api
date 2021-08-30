@@ -241,7 +241,7 @@ var _ = Describe("API", func() {
 		var offset uint64 = tipsCount / 4
 		req := &desc.ListTipsV1Request{Offset: offset, Limit: limit}
 
-		It("Successful retrieve", func() {
+		It("Successful retrieve without search query", func() {
 			rows := sqlmock.NewRows([]string{"id", "user_id", "problem_id", "text"})
 			for _, tip := range tips {
 				rows = rows.AddRow(tip.Id, tip.UserId, tip.ProblemId, tip.Text)
@@ -256,6 +256,50 @@ var _ = Describe("API", func() {
 				Expect(responseTip.ProblemId).Should(Equal(tips[idx].ProblemId))
 				Expect(responseTip.Text).Should(Equal(tips[idx].Text))
 			}
+		})
+
+		Context("Retrieve with search query", func() {
+			BeforeEach(func() {
+				req = &desc.ListTipsV1Request{SearchQuery: "some text to search", Offset: offset, Limit: limit}
+				db, mock, err = sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+				Expect(err).Should(BeNil())
+				ctx = context.Background()
+				producerMock = saramamock.NewSyncProducer(GinkgoT(), nil)
+				tipApi = api.NewOcpTipApi(repo.NewRepo(sqlx.NewDb(db, "sqlmock")), producerMock)
+			})
+
+			It("Successful retrieve with search query", func() {
+				rows := sqlmock.NewRows([]string{"id", "user_id", "problem_id", "text"})
+				for _, tip := range tips {
+					rows = rows.AddRow(tip.Id, tip.UserId, tip.ProblemId, tip.Text)
+				}
+				mock.ExpectQuery(`SELECT id, user_id, problem_id, text FROM tips
+								  WHERE search_vector @@ websearch_to_tsquery($1)
+			     				  ORDER BY ts_rank(search_vector, websearch_to_tsquery($1)) DESC
+								  LIMIT $2 OFFSET $3`).
+					WithArgs(req.SearchQuery, req.Limit, req.Offset).
+					WillReturnRows(rows)
+				res, err := tipApi.ListTipsV1(ctx, req)
+				Expect(err).Should(BeNil())
+				for idx, responseTip := range res.Tips {
+					Expect(responseTip.Id).Should(Equal(tips[idx].Id))
+					Expect(responseTip.UserId).Should(Equal(tips[idx].UserId))
+					Expect(responseTip.ProblemId).Should(Equal(tips[idx].ProblemId))
+					Expect(responseTip.Text).Should(Equal(tips[idx].Text))
+				}
+			})
+
+			It("Failed retrieve with search query", func() {
+				mock.ExpectQuery(`SELECT id, user_id, problem_id, text FROM tips
+								  WHERE search_vector @@ websearch_to_tsquery($1)
+			     				  ORDER BY ts_rank(search_vector, websearch_to_tsquery($1)) DESC
+								  LIMIT $2 OFFSET $3`).
+					WithArgs(req.SearchQuery, req.Limit, req.Offset).
+					WillReturnError(errors.New("some error"))
+				res, err := tipApi.ListTipsV1(ctx, req)
+				Expect(err.Error()).Should(ContainSubstring("some error"))
+				Expect(res).Should(BeNil())
+			})
 		})
 
 		It("Empty list", func() {

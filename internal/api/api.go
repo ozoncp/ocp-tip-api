@@ -7,6 +7,7 @@ import (
 	"github.com/ozoncp/ocp-tip-api/internal/metrics"
 	"github.com/ozoncp/ocp-tip-api/internal/models"
 	"github.com/ozoncp/ocp-tip-api/internal/utils"
+	"github.com/ozoncp/ocp-tip-api/internal/version"
 	desc "github.com/ozoncp/ocp-tip-api/pkg/ocp-tip-api"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -146,7 +147,7 @@ func (a *api) ListTipsV1(ctx context.Context, req *desc.ListTipsV1Request) (*des
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	tips, err := a.r.ListTips(ctx, req.Limit, req.Offset)
+	tips, err := a.r.ListTips(ctx, req.Limit, req.Offset, req.SearchQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -181,4 +182,12 @@ func (a *api) RemoveTipV1(ctx context.Context, req *desc.RemoveTipV1Request) (*d
 	}
 	metrics.IncCudCounter("delete")
 	return &desc.RemoveTipV1Response{Found: found}, nil
+}
+
+func (a *api) ServiceInfoV1(ctx context.Context, req *desc.ServiceInfoV1Request) (*desc.ServiceInfoV1Response, error) {
+	return &desc.ServiceInfoV1Response{
+		Release:   version.Release,
+		Commit:    version.Commit,
+		BuildTime: version.BuildTime,
+	}, nil
 }

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -14,7 +15,7 @@ type Repo interface {
 	AddTip(ctx context.Context, tip models.Tip) (uint64, error)
 	AddTips(ctx context.Context, tips []models.Tip) ([]uint64, error)
 	UpdateTip(ctx context.Context, tip models.Tip) error
-	ListTips(ctx context.Context, limit, offset uint64) ([]models.Tip, error)
+	ListTips(ctx context.Context, limit, offset uint64, searchQuery string) ([]models.Tip, error)
 	DescribeTip(ctx context.Context, tipId uint64) (*models.Tip, error)
 	RemoveTip(ctx context.Context, tipId uint64) (bool, error)
 }
@@ -81,9 +82,20 @@ func (r *repo) UpdateTip(ctx context.Context, tip models.Tip) error {
 	return nil
 }
 
-func (r *repo) ListTips(ctx context.Context, limit, offset uint64) (tips []models.Tip, err error) {
-	query := "SELECT id, user_id, problem_id, text FROM tips LIMIT $1 OFFSET $2"
-	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+func (r *repo) ListTips(ctx context.Context, limit, offset uint64, searchQuery string) (tips []models.Tip, err error) {
+	var rows *sql.Rows
+
+	if searchQuery == "" {
+		query := "SELECT id, user_id, problem_id, text FROM tips LIMIT $1 OFFSET $2"
+		rows, err = r.db.QueryContext(ctx, query, limit, offset)
+	} else {
+		query := `SELECT id, user_id, problem_id, text FROM tips 
+			 	  WHERE search_vector @@ websearch_to_tsquery($1)
+			 	  ORDER BY ts_rank(search_vector, websearch_to_tsquery($1)) DESC
+			 	  LIMIT $2 OFFSET $3`
+		rows, err = r.db.QueryContext(ctx, query, searchQuery, limit, offset)
+	}
+
 	if err != nil {
 		return nil, err
 	}
